@@ -14,15 +14,16 @@ function App() {
     if (inputRef.current) inputRef.current.focus();
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = async (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       if (inputValue.trim() === '') return;
 
       const wasAuthenticated = isAuthenticated;
-      const output = executeCommand(inputValue, setHistory, isAuthenticated, setIsAuthenticated);
+      
+      const output = await executeCommand(inputValue, setHistory, isAuthenticated, setIsAuthenticated);
 
-      if (!wasAuthenticated && (inputValue.trim() === 'tu_contraseña_secreta')) {
+      if (!wasAuthenticated && output === 'ACCESO CONCEDIDO. BIENVENIDO, SUPERVISOR JJ.') {
         setHistory([]);
       } else if (output !== null) {
         const newCommand = {

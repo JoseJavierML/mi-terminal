@@ -1,12 +1,22 @@
-export const executeCommand = (input, setHistory, isAuthenticated, setIsAuthenticated) => {
+import { supabase } from '../services/supabase';
+
+export const executeCommand = async (input, setHistory, isAuthenticated, setIsAuthenticated) => {
   const rawInput = input.trim();
   
   if (!isAuthenticated) {
-    if (rawInput === 'tu_contraseña_secreta') {
+    const email = import.meta.env.VITE_USER_EMAIL;
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: rawInput,
+    });
+
+    if (error) {
+      return 'ERROR: CREDENCIALES INVÁLIDAS. ACCESO DENEGADO.';
+    }
+
+    if (data.user) {
       setIsAuthenticated(true);
       return 'ACCESO CONCEDIDO. BIENVENIDO, SUPERVISOR JJ.';
-    } else {
-      return 'ERROR: CREDENCIALES INVÁLIDAS. ACCESO DENEGADO.';
     }
   }
 
@@ -29,6 +39,7 @@ export const executeCommand = (input, setHistory, isAuthenticated, setIsAuthenti
       return 'admin [NIVEL DE ACCESO: SUPERVISOR OMEGA]';
       
     case 'logout':
+      await supabase.auth.signOut();
       setIsAuthenticated(false);
       setHistory([]);
       return null;
