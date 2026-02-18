@@ -5,6 +5,8 @@ import './index.css';
 function App() {
   const [inputValue, setInputValue] = useState('');
   const [history, setHistory] = useState([]);
+  const [inputHistory, setInputHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   const inputRef = useRef(null);
@@ -15,20 +17,45 @@ function App() {
   };
 
   const handleKeyDown = async (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (inputHistory.length > 0) {
+        const nextIndex = historyIndex + 1;
+        if (nextIndex < inputHistory.length) {
+          setHistoryIndex(nextIndex);
+          setInputValue(inputHistory[inputHistory.length - 1 - nextIndex]);
+        }
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (historyIndex > 0) {
+        const prevIndex = historyIndex - 1;
+        setHistoryIndex(prevIndex);
+        setInputValue(inputHistory[inputHistory.length - 1 - prevIndex]);
+      } else if (historyIndex === 0) {
+        setHistoryIndex(-1);
+        setInputValue('');
+      }
+    } else if (e.key === 'Enter') {
       e.preventDefault();
       if (inputValue.trim() === '') return;
 
+      const currentInput = inputValue;
       const wasAuthenticated = isAuthenticated;
+
+      if (wasAuthenticated) {
+        setInputHistory(prev => [...prev, currentInput]);
+      }
+      setHistoryIndex(-1);
       
-      const output = await executeCommand(inputValue, setHistory, isAuthenticated, setIsAuthenticated);
+      const output = await executeCommand(currentInput, setHistory, isAuthenticated, setIsAuthenticated);
 
       if (!wasAuthenticated && output === 'ACCESO CONCEDIDO. BIENVENIDO, SUPERVISOR JJ.') {
         setHistory([]);
       } else if (output !== null) {
         const newCommand = {
           id: Date.now(),
-          command: isAuthenticated ? inputValue : inputValue.replace(/./g, '*'),
+          command: isAuthenticated ? currentInput : currentInput.replace(/./g, '*'),
           output: output
         };
         setHistory(prev => [...prev, newCommand]);
